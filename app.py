@@ -6,10 +6,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
-# ✅ API KEY (IMPORTANT FIX)
-API_KEY = os.getenv("API_KEY")
+# ✅ API KEY FIX
+API_KEY = os.getenv("73a0a5b2c907006e9510b0468c80ff95")
 
-# ✅ FAST LOAD (cache for speed 🔥)
+# ✅ LOAD DATA FAST
 @st.cache_data
 def load_data():
     movies = pd.read_csv("tmdb_5000_movies.csv")
@@ -27,8 +27,8 @@ def load_data():
     def fetch_director(text):
         for i in ast.literal_eval(text):
             if i['job'] == 'Director':
-                return i['name']
-        return ""
+                return [i['name']]
+        return []
 
     movies['genres'] = movies['genres'].apply(convert)
     movies['keywords'] = movies['keywords'].apply(convert)
@@ -37,30 +37,30 @@ def load_data():
 
     movies['overview'] = movies['overview'].fillna('').apply(lambda x: x.split())
 
+    # ✅ SAFE TYPE FIX
     movies['genres'] = movies['genres'].apply(lambda x: x if isinstance(x, list) else [])
-movies['keywords'] = movies['keywords'].apply(lambda x: x if isinstance(x, list) else [])
-movies['cast'] = movies['cast'].apply(lambda x: x if isinstance(x, list) else [])
-movies['crew'] = movies['crew'].apply(lambda x: [x] if isinstance(x, str) else [])
+    movies['keywords'] = movies['keywords'].apply(lambda x: x if isinstance(x, list) else [])
+    movies['cast'] = movies['cast'].apply(lambda x: x if isinstance(x, list) else [])
+    movies['crew'] = movies['crew'].apply(lambda x: x if isinstance(x, list) else [])
 
     movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
 
     new_df = movies[['movie_id','title','tags']]
-    new_df['tags'] = new_df['tags'].apply(lambda x: " ".join([str(i).replace(" ","") for i in x]).lower())
+    new_df['tags'] = new_df['tags'].apply(lambda x: " ".join([str(i) for i in x]).lower())
 
     cv = CountVectorizer(max_features=5000, stop_words='english')
     vectors = cv.fit_transform(new_df['tags']).toarray()
-
     similarity = cosine_similarity(vectors)
 
     return new_df, similarity
 
-
 new_df, similarity = load_data()
 
-# ✅ GET TMDB ID (MAIN FIX 🔥)
+# ✅ FIX: MOVIE NAME → TMDB ID
 def get_movie_id(movie_name):
     url = f"https://api.themoviedb.org/3/search/movie?api_key={API_KEY}&query={movie_name}"
     data = requests.get(url).json()
+
     if data.get('results'):
         return data['results'][0]['id']
     return None
@@ -69,32 +69,32 @@ def get_movie_id(movie_name):
 def fetch_poster(movie_name):
     movie_id = get_movie_id(movie_name)
     if not movie_id:
-        return "https://via.placeholder.com/300x450?text=No+Image"
+        return "https://via.placeholder.com/300x450"
 
     url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}"
     data = requests.get(url).json()
 
     if data.get('poster_path'):
         return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
-    return "https://via.placeholder.com/300x450?text=No+Image"
+    return "https://via.placeholder.com/300x450"
 
-# ✅ DETAILS
+# ✅ MOVIE DETAILS
 def fetch_movie_details(movie_name):
     movie_id = get_movie_id(movie_name)
     if not movie_id:
-        return ("https://via.placeholder.com/300x450?text=No+Image",
-                "No Title","N/A","No description")
+        return ("https://via.placeholder.com/300x450","No Title","N/A","No description")
 
     url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}"
     data = requests.get(url).json()
 
-    poster = "https://image.tmdb.org/t/p/w500/" + data['poster_path'] if data.get('poster_path') else "https://via.placeholder.com/300x450?text=No+Image"
-    
+    poster = "https://image.tmdb.org/t/p/w500/" + data['poster_path'] if data.get('poster_path') else "https://via.placeholder.com/300x450"
+
     return poster, data.get('title','No Title'), data.get('vote_average','N/A'), data.get('overview','No description')
 
 # ✅ CAST
 def fetch_cast(movie_name):
     movie_id = get_movie_id(movie_name)
+
     if not movie_id:
         return ["No Actor"]*5, ["https://via.placeholder.com/150"]*5
 
@@ -104,11 +104,10 @@ def fetch_cast(movie_name):
     if 'cast' not in data:
         return ["No Actor"]*5, ["https://via.placeholder.com/150"]*5
 
-    names = []
-    images = []
+    names, images = [], []
 
     for i in data['cast'][:5]:
-        names.append(i.get('name', 'No Actor'))
+        names.append(i.get('name','No Actor'))
         if i.get('profile_path'):
             images.append("https://image.tmdb.org/t/p/w500/" + i['profile_path'])
         else:
@@ -116,15 +115,16 @@ def fetch_cast(movie_name):
 
     return names, images
 
-# ✅ RECOMMEND
+# ✅ RECOMMENDATION
 def recommend(movie):
     index = new_df[new_df['title'] == movie].index[0]
     distances = similarity[index]
 
-    movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+    movies_list = sorted(list(enumerate(distances)),
+                         reverse=True,
+                         key=lambda x: x[1])[1:6]
 
-    names = []
-    posters = []
+    names, posters = [], []
 
     for i in movies_list:
         title = new_df.iloc[i[0]].title
@@ -149,10 +149,11 @@ if st.button("Recommend") and selected_movie:
     poster, title, rating, overview = fetch_movie_details(selected_movie)
 
     st.subheader("🎬 Selected Movie")
-
     col1, col2 = st.columns([1,2])
+
     with col1:
         st.image(poster)
+
     with col2:
         st.markdown(f"**{title}**")
         st.markdown(f"⭐ Rating: {rating}")
