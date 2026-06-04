@@ -17,4 +17,4 @@ A Netflix-style movie recommendation web app built using:
 - 🖼️ Posters and UI rendering
 
 ## Live Demo
-👉 YOUR_DEPLOY_LINK_HERE
+👉 (https://movie-recommender-clean-gw2xe9sfrws7b3hj3rfwwb.streamlit.app/)
