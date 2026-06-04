@@ -71,17 +71,27 @@ similarity = cosine_similarity(vectors)
 def fetch_poster(movie_id):
     url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}"
     data = requests.get(url).json()
-    return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
+
+    if data.get('poster_path'):
+        return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
+    else:
+        return "https://via.placeholder.com/300x450?text=No+Image"
 
 def fetch_movie_details(movie_id):
     url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}"
     data = requests.get(url).json()
-    return (
-        "https://image.tmdb.org/t/p/w500/" + data['poster_path'],
-        data['title'],
-        data['vote_average'],
-        data['overview']
-    )
+    
+    # ✅ poster safety check
+    if data.get('poster_path'):
+        poster = "https://image.tmdb.org/t/p/w500/" + data['poster_path']
+    else:
+        poster = "https://via.placeholder.com/300x450?text=No+Image"
+
+    title = data.get('title', 'No Title')
+    rating = data.get('vote_average', 'N/A')
+    overview = data.get('overview', 'No description available')
+
+    return poster, title, rating, overview
 
 def fetch_cast(movie_id):
     url = f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={API_KEY}"
