@@ -6,35 +6,11 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
-# ✅ API KEY
+
+# ✅ API KEY FIX
 API_KEY = os.getenv("API_KEY")
 
-# ✅ -------- UI STYLE (Netflix look 🔥) --------
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-}
-h1 {
-    text-align: center;
-    color: white;
-}
-.stButton button {
-    background-color: #ff4b4b;
-    color: white;
-    border-radius: 10px;
-}
-img {
-    border-radius: 10px;
-    transition: 0.3s;
-}
-img:hover {
-    transform: scale(1.05);
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ✅ -------- LOAD DATA --------
+# ✅ LOAD DATA FAST
 @st.cache_data
 def load_data():
     movies = pd.read_csv("tmdb_5000_movies.csv")
@@ -62,6 +38,12 @@ def load_data():
 
     movies['overview'] = movies['overview'].fillna('').apply(lambda x: x.split())
 
+    # ✅ SAFE TYPE FIX
+    movies['genres'] = movies['genres'].apply(lambda x: x if isinstance(x, list) else [])
+    movies['keywords'] = movies['keywords'].apply(lambda x: x if isinstance(x, list) else [])
+    movies['cast'] = movies['cast'].apply(lambda x: x if isinstance(x, list) else [])
+    movies['crew'] = movies['crew'].apply(lambda x: x if isinstance(x, list) else [])
+
     movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
 
     new_df = movies[['movie_id','title','tags']]
@@ -75,14 +57,10 @@ def load_data():
 
 new_df, similarity = load_data()
 
-# ✅ FIXED API SEARCH (IMPORTANT 🔥)
+# ✅ FIX: MOVIE NAME → TMDB ID
 def get_movie_id(movie_name):
-    url = "https://api.themoviedb.org/3/search/movie"
-    params = {
-        "api_key": API_KEY,
-        "query": movie_name
-    }
-    data = requests.get(url, params=params).json()
+    url = f"https://api.themoviedb.org/3/search/movie?api_key={API_KEY}&query={movie_name}"
+    data = requests.get(url).json()
 
     if data.get('results'):
         return data['results'][0]['id']
@@ -101,10 +79,9 @@ def fetch_poster(movie_name):
         return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
     return "https://via.placeholder.com/300x450"
 
-# ✅ DETAILS
+# ✅ MOVIE DETAILS
 def fetch_movie_details(movie_name):
     movie_id = get_movie_id(movie_name)
-
     if not movie_id:
         return ("https://via.placeholder.com/300x450","No Title","N/A","No description")
 
@@ -139,7 +116,7 @@ def fetch_cast(movie_name):
 
     return names, images
 
-# ✅ RECOMMEND
+# ✅ RECOMMENDATION
 def recommend(movie):
     index = new_df[new_df['title'] == movie].index[0]
     distances = similarity[index]
@@ -157,9 +134,8 @@ def recommend(movie):
 
     return names, posters
 
-# ✅ -------- UI --------
-st.markdown("<h1>🎬 Movie Recommender</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:gray;'>Find movies like your favorites</p>", unsafe_allow_html=True)
+# ✅ UI
+st.title("🎬 Movie Recommender System")
 
 search = st.text_input("🔍 Search Movie")
 
@@ -173,8 +149,8 @@ if st.button("Recommend") and selected_movie:
 
     poster, title, rating, overview = fetch_movie_details(selected_movie)
 
-    st.markdown("## 🎬 Selected Movie")
-    col1, col2 = st.columns([1,3])
+    st.subheader("🎬 Selected Movie")
+    col1, col2 = st.columns([1,2])
 
     with col1:
         st.image(poster)
@@ -184,7 +160,7 @@ if st.button("Recommend") and selected_movie:
         st.markdown(f"⭐ Rating: {rating}")
         st.write(overview)
 
-    st.markdown("## 🎭 Cast")
+    st.subheader("🎭 Cast")
     names, images = fetch_cast(selected_movie)
 
     cols = st.columns(5)
@@ -193,7 +169,7 @@ if st.button("Recommend") and selected_movie:
             st.image(images[i])
             st.caption(names[i])
 
-    st.markdown("## 🎯 Recommended Movies")
+    st.subheader("🎯 Recommended")
 
     rec_names, rec_posters = recommend(selected_movie)
 
