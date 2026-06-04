@@ -6,8 +6,9 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
+
 # ✅ API KEY FIX
-API_KEY = os.getenv("73a0a5b2c907006e9510b0468c80ff95")
+API_KEY = os.getenv("API_KEY")
 
 # ✅ LOAD DATA FAST
 @st.cache_data
