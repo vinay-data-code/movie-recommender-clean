@@ -97,17 +97,23 @@ def fetch_cast(movie_id):
     url = f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={API_KEY}"
     data = requests.get(url).json()
 
-    names = []
-    images = []
+    cast_names = []
+    cast_images = []
+
+    # ✅ SAFE check
+    if 'cast' not in data:
+        return ["No Actor"]*5, ["https://via.placeholder.com/150"]*5
 
     for i in data['cast'][:5]:
-        names.append(i['name'])
-        if i['profile_path']:
-            images.append("https://image.tmdb.org/t/p/w500/" + i['profile_path'])
+        cast_names.append(i.get('name', 'No Name'))
+        
+        if i.get('profile_path'):
+            cast_images.append("https://image.tmdb.org/t/p/w500/" + i['profile_path'])
         else:
-            images.append("https://via.placeholder.com/150")
+            cast_images.append("https://via.placeholder.com/150")
 
-    return names, images
+    return cast_names, cast_images
+
 
 def recommend(movie):
     index = new_df[new_df['title'] == movie].index[0]
