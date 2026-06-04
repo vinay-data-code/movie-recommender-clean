@@ -37,6 +37,11 @@ def load_data():
 
     movies['overview'] = movies['overview'].fillna('').apply(lambda x: x.split())
 
+    movies['genres'] = movies['genres'].apply(lambda x: x if isinstance(x, list) else [])
+movies['keywords'] = movies['keywords'].apply(lambda x: x if isinstance(x, list) else [])
+movies['cast'] = movies['cast'].apply(lambda x: x if isinstance(x, list) else [])
+movies['crew'] = movies['crew'].apply(lambda x: [x] if isinstance(x, str) else [])
+
     movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
 
     new_df = movies[['movie_id','title','tags']]
