@@ -6,10 +6,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
-# ✅ API KEY
+# API KEY
 API_KEY = os.getenv("API_KEY")
 
-# ✅ -------- UI STYLE (Netflix look 🔥) --------
+# UI STYLE
 st.markdown("""
 <style>
 body {
@@ -34,7 +34,7 @@ img:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# ✅ -------- LOAD DATA --------
+# LOAD DATA
 @st.cache_data
 def load_data():
     movies = pd.read_csv("tmdb_5000_movies.csv")
@@ -75,20 +75,22 @@ def load_data():
 
 new_df, similarity = load_data()
 
-# ✅ FIXED API SEARCH (IMPORTANT 🔥)
+# API SEARCH
 def get_movie_id(movie_name):
     url = "https://api.themoviedb.org/3/search/movie"
+    
     params = {
         "api_key": API_KEY,
         "query": movie_name
     }
+    
     data = requests.get(url, params=params).json()
 
     if data.get('results'):
         return data['results'][0]['id']
     return None
 
-# ✅ POSTER
+# POSTER
 def fetch_poster(movie_name):
     movie_id = get_movie_id(movie_name)
     if not movie_id:
@@ -101,7 +103,7 @@ def fetch_poster(movie_name):
         return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
     return "https://via.placeholder.com/300x450"
 
-# ✅ DETAILS
+# DETAILS
 def fetch_movie_details(movie_name):
     movie_id = get_movie_id(movie_name)
 
@@ -115,7 +117,7 @@ def fetch_movie_details(movie_name):
 
     return poster, data.get('title','No Title'), data.get('vote_average','N/A'), data.get('overview','No description')
 
-# ✅ CAST
+# CAST
 def fetch_cast(movie_name):
     movie_id = get_movie_id(movie_name)
 
@@ -139,7 +141,7 @@ def fetch_cast(movie_name):
 
     return names, images
 
-# ✅ RECOMMEND
+# RECOMMEND
 def recommend(movie):
     index = new_df[new_df['title'] == movie].index[0]
     distances = similarity[index]
@@ -157,7 +159,7 @@ def recommend(movie):
 
     return names, posters
 
-# ✅ -------- UI --------
+# UI
 st.markdown("<h1>🎬 Movie Recommender</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;color:gray;'>Find movies like your favorites</p>", unsafe_allow_html=True)
 

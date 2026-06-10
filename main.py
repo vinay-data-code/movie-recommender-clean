@@ -1,15 +1,17 @@
 import pandas as pd
 import ast
 
+# ---------------- LOAD DATA ---------------- #
 
-# Load data
 movies = pd.read_csv('tmdb_5000_movies.csv')
 credits = pd.read_csv('tmdb_5000_credits.csv')
 
-# Merge data
+# ---------------- MERGE DATA ---------------- #
+
 movies = movies.merge(credits, on='title')
 
-# Select important columns
+# ---------------- SELECT COLUMNS ---------------- #
+
 movies = movies[['movie_id','title','overview','genres','keywords','cast','crew']]
 
 # ---------------- FUNCTIONS ---------------- #
@@ -75,7 +77,7 @@ vectors = cv.fit_transform(new_df['tags']).toarray()
 
 similarity = cosine_similarity(vectors)
 
-# ---------------- RECOMMEND ---------------- #
+# ---------------- RECOMMEND FUNCTION ---------------- #
 
 def recommend(movie):
     index = new_df[new_df['title'] == movie].index[0]
@@ -93,8 +95,10 @@ def recommend(movie):
 print("\n🎬 Recommended Movies for Avatar:\n")
 recommend('Avatar')
 
+# ---------------- SAVE ---------------- #
 
 import pickle
 
 pickle.dump(new_df.to_dict(), open('movies.pkl','wb'))
 pickle.dump(similarity, open('similarity.pkl','wb'))
+``
