@@ -9,7 +9,7 @@ import os
 # API KEY
 API_KEY = os.getenv("API_KEY")
 
-# UI STYLE
+# UI STYLE Background
 st.markdown("""
 <style>
 body {
