@@ -101,4 +101,3 @@ import pickle
 
 pickle.dump(new_df.to_dict(), open('movies.pkl','wb'))
 pickle.dump(similarity, open('similarity.pkl','wb'))
-``
